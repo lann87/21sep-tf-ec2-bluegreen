@@ -1,7 +1,7 @@
 variable "name" {
   description = "Unique identifier for the user"
   type        = string
-  default     = "alanp-bluegreen-21sep"
+  default     = "alanp-canary"
 }
 
 variable "vpc_id" {
@@ -23,7 +23,7 @@ variable "enable_green_env" {
 }
 
 variable "traffic_distribution" {
-  description = "Levels of traffic distribution"
+  description = "Levels of traffic distribution (options: blue, blue-90, split, green-90, green)"
   type        = string
 }
 
