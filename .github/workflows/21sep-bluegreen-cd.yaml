@@ -1,8 +1,11 @@
 name: Blue/Green Deployment
 
+# Trigger the workflow manually with workflow_dispatch and a prompt for user input
 on:
   workflow_dispatch:
     inputs:
+        # Input parameter to select the type of traffic distribution for canary deployment
+        # Options are: blue, blue-90, split, green-90, green
         traffic_distribution:
             description: "Select traffic distribution (blue, blue-90, split, green-90, green)"
             required: true
@@ -10,12 +13,15 @@ on:
             type: string
 
 jobs:
+  # The main job for the CI/CD workflow
   CD:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest # The job will run on the latest version of the Ubuntu runner
     steps:
+    # Step 1: Checkout the source code from the repository
     - name: Checkout
       uses: actions/checkout@v3
 
+    # Step 2: Configure AWS credentials using secrets stored in GitHub
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
@@ -23,19 +29,23 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ vars.AWS_REGION }}
 
+    # Step 3: Setup & initialise Terraform        
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v2
 
     - name: Terraform Init
       run: terraform init
 
+    # Step 4: Apply the Terraform configuration to deploy the infrastructure with canary deployment  
+    # The user-selected input is passed to the Terraform variables
     - name: Terraform Apply - Canary Deployment
       run: terraform apply -auto-approve -var="enable_green_env=true" -var="traffic_distribution=${{ github.event.inputs.traffic_distribution }}"
       env:
         TF_VAR_enable_green_env: true
         TF_VAR_traffic_distribution: ${{ github.event.inputs.traffic_distribution }}
 
-
+    # Step 6: Export the Terraform output values after the deployment is complete
+    # These outputs could include useful information such as URLs, instance IDs, or other resources
     - name: Export terraform outputs
       id: tfout
       run: |
